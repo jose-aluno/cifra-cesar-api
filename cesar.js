@@ -1,12 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 
+// Lógica da Cifra de César (apenas letras A-Z / a-z são deslocadas)
+
 function deslocarCaractere(ch, deslocamento) {
   const codigo = ch.charCodeAt(0);
   let base;
-  if (codigo >= 65 && codigo <= 90) base = 65;        
-  else if (codigo >= 97 && codigo <= 122) base = 97;  
-  else return ch;                                     
+  if (codigo >= 65 && codigo <= 90) base = 65;        // A-Z
+  else if (codigo >= 97 && codigo <= 122) base = 97;  // a-z
+  else return ch;                                     // demais caracteres permanecem
 
   const novo = (((codigo - base + deslocamento) % 26) + 26) % 26;
   return String.fromCharCode(base + novo);
@@ -20,15 +22,21 @@ function decifrar(texto, deslocamento) {
   return cifrar(texto, -deslocamento);
 }
 
+// ---- Força bruta: escolhe automaticamente a possibilidade mais provável ----
+// Idioma suportado: apenas português (dicionário e frequência de letras são do português).
+
+// Dicionário de palavras do português (uma por linha, em minúsculas, com acentos)
 const DICIONARIO = new Set(
   fs.readFileSync(path.join(__dirname, 'dicionario.txt'), 'utf-8').split('\n').filter(Boolean)
 );
 
+// Frequência (%) das letras no português, de A a Z (usada quando o dicionário não decide)
 const FREQ_PT = [
   14.63, 1.04, 3.88, 4.99, 12.57, 1.02, 1.30, 1.28, 6.18, 0.40, 0.02, 2.78, 4.74,
   5.05, 10.73, 2.52, 1.20, 6.53, 7.81, 4.34, 4.63, 1.67, 0.01, 0.21, 0.01, 0.47,
 ];
 
+// Cobertura: fração das letras que pertencem a palavras encontradas no dicionário (0 a 1)
 function coberturaDicionario(texto) {
   const palavras = texto.toLowerCase().match(/[a-zà-öø-ú]+/g) || [];
   let letras = 0;
@@ -40,6 +48,8 @@ function coberturaDicionario(texto) {
   return letras === 0 ? 0 : reconhecidas / letras;
 }
 
+// Distância (qui-quadrado) entre a frequência das letras do texto e a do português.
+// Quanto menor, mais parecido com português.
 function distanciaFrequencia(texto) {
   const contagem = new Array(26).fill(0);
   let total = 0;
@@ -59,6 +69,10 @@ function distanciaFrequencia(texto) {
   return qui / total;
 }
 
+// Testa todos os deslocamentos (1 a 25) e devolve sempre um texto claro (nunca falha):
+// vence quem tiver maior cobertura no dicionário; em empate (inclusive sem nenhuma palavra
+// reconhecida), a melhor frequência de letras. Palavras desconhecidas, números, acentos e
+// pontuação são mantidos como estão no texto.
 function quebrar(textoCifrado) {
   let melhor = null;
   let melhorCobertura = -1;
