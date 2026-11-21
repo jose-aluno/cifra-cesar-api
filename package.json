@@ -1,0 +1,13 @@
+{
+  "name": "cifra-cesar-api",
+  "version": "1.0.0",
+  "description": "API da Cifra de César (cifrar, decifrar e quebrar por força bruta)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
